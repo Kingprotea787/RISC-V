@@ -27,12 +27,15 @@ module minirv_tb;
   wire [31:0] pc;
   wire [31:0] reg_a0;
   wire        mem_clk;
+  wire [31:0] imem_addr;
+  wire [31:0] imem_dataout;
   wire [31:0] mem_addr;
   wire [31:0] mem_dataout;
   wire [31:0] mem_datain;
   wire        mem_we;
 
   reg [31:0] mem [0:MEM_WORDS - 1];
+  reg [31:0] imem_dataout_r;
   reg [31:0] mem_dataout_r;
 
   reg [1023:0] hex_file;
@@ -46,6 +49,14 @@ module minirv_tb;
 
   wire is_fb_addr = (mem_addr >= FB_BASE) && (mem_addr < FB_END);
   wire [31:0] fb_index = (mem_addr - FB_BASE) >> 2;
+
+  // Address mapping for instruction memory
+  wire [31:0] imem_addr_mapped =
+    ((imem_addr >= 32'h0009_0000) && (imem_addr < 32'h000a_0000)) ? (imem_addr - 32'h0004_0000) :
+                                                                     imem_addr;
+  wire [31:0] imem_word_index = imem_addr_mapped[31:2];
+
+  // Address mapping for data memory
   wire [31:0] mem_addr_mapped =
     ((mem_addr >= 32'h0009_0000) && (mem_addr < 32'h000a_0000)) ? (mem_addr - 32'h0004_0000) :
                                                                    mem_addr;
@@ -57,18 +68,30 @@ module minirv_tb;
     .pc(pc),
     .reg_a0(reg_a0),
     .mem_clk(mem_clk),
+    .imem_addr(imem_addr),
+    .imem_dataout(imem_dataout),
     .mem_addr(mem_addr),
     .mem_dataout(mem_dataout),
     .mem_datain(mem_datain),
     .mem_we(mem_we)
   );
 
+  assign imem_dataout = imem_dataout_r;
   assign mem_dataout = mem_dataout_r;
 
   // 100 MHz clock.
   always #5 clk = ~clk;
 
-  // Read path for RAM and framebuffer MMIO.
+  // Instruction memory read path (combinational).
+  always @(*) begin
+    if (imem_word_index < MEM_WORDS) begin
+      imem_dataout_r = mem[imem_word_index];
+    end else begin
+      imem_dataout_r = 32'b0;
+    end
+  end
+
+  // Data memory read path for RAM and framebuffer MMIO.
   always @(*) begin
     if (is_fb_addr) begin
       // F6 only requires `sw` to framebuffer, so readback can return zero.

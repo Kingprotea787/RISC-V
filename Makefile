@@ -87,17 +87,17 @@ prepare-official: $(OFF_MEM_HEX) $(OFF_SUM_HEX) $(OFF_VGA_HEX)
 
 run-official-mem: prepare-official sim $(CHECK)
 	@if [ ! -f "$(OFF_MEM_SRC)" ]; then echo "Missing $(OFF_MEM_SRC)"; exit 1; fi
-	vvp $(SIM) +HEX=$(OFF_MEM_HEX) +MAX_CYCLES=20000 > $(BUILD_DIR)/official_mem.log
+	vvp $(SIM) +HEX=$(OFF_MEM_HEX) +MAX_CYCLES=10000 > $(BUILD_DIR)/official_mem.log
 	$(CHECK) --log $(BUILD_DIR)/official_mem.log --a0 0x0 --pc-range 0x00001218 0x00001220
 
 run-official-sum: prepare-official sim $(CHECK)
 	@if [ ! -f "$(OFF_SUM_SRC)" ]; then echo "Missing $(OFF_SUM_SRC)"; exit 1; fi
-	vvp $(SIM) +HEX=$(OFF_SUM_HEX) +MAX_CYCLES=20000 > $(BUILD_DIR)/official_sum.log
+	vvp $(SIM) +HEX=$(OFF_SUM_HEX) +MAX_CYCLES=10000 > $(BUILD_DIR)/official_sum.log
 	$(CHECK) --log $(BUILD_DIR)/official_sum.log --a0 0x0 --pc-range 0x00000224 0x0000022c
 
 run-official-vga: prepare-official sim-vga $(CHECK) $(FB2PPM)
 	@if [ ! -f "$(OFF_VGA_SRC)" ]; then echo "Missing $(OFF_VGA_SRC)"; exit 1; fi
-	vvp $(SIM_VGA) +HEX=$(OFF_VGA_HEX) +MAX_CYCLES=1300000 +FBDUMP=$(BUILD_DIR)/vga_fb.hex > $(BUILD_DIR)/official_vga.log
+	vvp $(SIM_VGA) +HEX=$(OFF_VGA_HEX) +MAX_CYCLES=650000 +FBDUMP=$(BUILD_DIR)/vga_fb.hex > $(BUILD_DIR)/official_vga.log
 	$(CHECK) --log $(BUILD_DIR)/official_vga.log --a0 0x0 --fb-dump $(BUILD_DIR)/vga_fb.hex --min-nonzero-pixels 1000
 	$(FB2PPM) $(BUILD_DIR)/vga_fb.hex $(BUILD_DIR)/vga.ppm
 	@echo "Generated image: $(BUILD_DIR)/vga.ppm"
