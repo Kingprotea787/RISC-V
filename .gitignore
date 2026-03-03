@@ -1,0 +1,4 @@
+build/
+tests/mem.hex
+tests/sum.hex
+.DS_Store
